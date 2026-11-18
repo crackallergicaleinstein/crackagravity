@@ -23,6 +23,8 @@ const state = {
   busy: false,
   history: [],
   controller: null,
+  email: '',
+  showEmail: false,
   source: '',
 };
 
@@ -63,9 +65,25 @@ function labelForBudget(budget) {
 
 /* ─────────────────────────── render: rail ─────────────────────────── */
 
+function maskEmail(email) {
+  if (!email) return 'not signed in';
+  const [local, domain] = email.split('@');
+  if (!domain) return email;
+  return local.slice(0, 2) + '\u2022'.repeat(Math.max(3, Math.min(6, local.length - 2))) + '@' + domain;
+}
+
+function renderAccount() {
+  const el = $('account-email');
+  if (!el) return;
+  el.textContent = state.showEmail ? (state.email || 'not signed in') : maskEmail(state.email);
+  el.title = state.showEmail ? 'click to hide' : 'click to show';
+  el.classList.toggle('revealed', Boolean(state.showEmail));
+}
+
 async function loadState() {
   const s = await apiJson('/api/state');
-  $('account-email').textContent = s.account.email || 'not signed in';
+  state.email = s.account.email || '';
+  renderAccount();
   const tierBits = [];
   if (s.tier.current) tierBits.push(s.tier.current);
   if (s.tier.paid) tierBits.push(`paid: ${s.tier.paid}`);
@@ -549,6 +567,10 @@ async function boot() {
     $('send').disabled = false;
   }
 
+  $('account-email').addEventListener('click', () => {
+    state.showEmail = !state.showEmail;
+    renderAccount();
+  });
   $('model-select').addEventListener('change', (e) => setModel(e.target.value));
   $('new-chat').addEventListener('click', clearChat);
   $('doctor').addEventListener('click', runDoctor);

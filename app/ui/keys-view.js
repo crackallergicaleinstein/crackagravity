@@ -3,9 +3,17 @@
 const API = {
   keys: [],
   activeKey: '',
+  revealSnippet: false,
   snippet: 'curl',
   file: '',
 };
+
+/** Keys are masked in snippets until the user asks for them. */
+function snippetKey() {
+  if (!API.activeKey) return '<copy a key first>';
+  if (API.revealSnippet) return API.activeKey;
+  return `${API.activeKey.slice(0, 8)}…${API.activeKey.slice(-4)}`;
+}
 
 function fmtDate(iso) {
   if (!iso) return '—';
@@ -20,7 +28,7 @@ function apiBase() {
 
 function renderSnippet() {
   const base = apiBase();
-  const key = API.activeKey || '<press copy on a key>';
+  const key = snippetKey();
   const model = state.model || 'gemini-3.8-flash-low';
 
   const bodies = {
@@ -136,6 +144,7 @@ async function keyAction(action, id) {
     if (action === 'copy') {
       const revealed = await apiJson(`/api/keys/${id}/reveal`, { method: 'POST' });
       API.activeKey = revealed.key;
+      API.revealSnippet = true;
       await copyText(revealed.key);
       renderSnippet();
       return;
@@ -143,6 +152,7 @@ async function keyAction(action, id) {
     if (action === 'rotate') {
       const payload = await apiJson(`/api/keys/${id}/rotate`, { method: 'POST' });
       API.activeKey = payload.key.key;
+      API.revealSnippet = false;
       renderKeys(payload);
       renderSnippet();
       return;
@@ -169,6 +179,7 @@ async function createKey() {
   try {
     const payload = await apiJson('/api/keys', { method: 'POST', body: JSON.stringify({ name }) });
     API.activeKey = payload.key.key;
+    API.revealSnippet = true;
     input.value = '';
     renderKeys(payload);
     renderSnippet();
@@ -205,6 +216,15 @@ function bindApiView() {
       for (const other of document.querySelectorAll('[data-snippet]')) {
         other.classList.toggle('active', other === tab);
       }
+      renderSnippet();
+    };
+  }
+
+  const reveal = $('snippet-reveal');
+  if (reveal) {
+    reveal.onclick = () => {
+      API.revealSnippet = !API.revealSnippet;
+      reveal.textContent = API.revealSnippet ? 'hide key' : 'show key';
       renderSnippet();
     };
   }

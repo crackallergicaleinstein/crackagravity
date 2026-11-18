@@ -8,7 +8,7 @@ Point any OpenAI-compatible client (Cline, Roo, Continue, aider, the `openai`
 SDK) or any Claude-native client at `http://127.0.0.1:8790/v1` and it works.
 Same port, same key store, one window with an API tab and a chat tab.
 
-![API tab](app/shot-api.png)
+![API tab](docs/images/api.png)
 
 ---
 
@@ -140,7 +140,7 @@ because thoughts count against the output cap.
 
 ## The app
 
-![chat tab](app/shot-chat2.png)
+![chat tab](docs/images/chat.png)
 
 Two views:
 

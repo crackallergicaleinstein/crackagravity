@@ -615,3 +615,7 @@ table.keys tr.disabled td { opacity: 0.45; }
   line-height: 1.6;
   white-space: pre;
 }
+/* account line: masked by default, click to reveal */
+.account { cursor: pointer; user-select: none; }
+.account::after { content: ' ·'; opacity: 0.35; }
+.account.revealed { user-select: text; }
