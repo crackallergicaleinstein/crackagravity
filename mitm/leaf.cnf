@@ -1,0 +1,8 @@
+[req]
+distinguished_name=dn
+[dn]
+[ext]
+subjectAltName=DNS:*.googleapis.com,DNS:cloudcode-pa.googleapis.com,DNS:daily-cloudcode-pa.googleapis.com,DNS:autopush-cloudcode-pa.sandbox.googleapis.com,DNS:antigravity.google,DNS:*.run.app,DNS:*.google.com
+basicConstraints=CA:FALSE
+keyUsage=digitalSignature,keyEncipherment
+extendedKeyUsage=serverAuth

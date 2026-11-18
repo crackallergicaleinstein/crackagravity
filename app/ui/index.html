@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>agy — antigravity workspace</title>
+<link rel="stylesheet" href="styles.css?v=12">
+</head>
+<body data-session="__SESSION__">
+<div class="crash" id="crash" hidden></div>
+<div class="grain" aria-hidden="true"></div>
+
+<aside class="rail">
+  <header class="brand">
+    <svg class="mark" viewBox="0 0 48 48" aria-hidden="true">
+      <circle cx="24" cy="14" r="6.5" fill="none" stroke="#d97757" stroke-width="2.5"/>
+      <circle cx="15" cy="30" r="6.5" fill="none" stroke="#6a9bcc" stroke-width="2.5"/>
+      <circle cx="33" cy="30" r="6.5" fill="none" stroke="#788c5d" stroke-width="2.5"/>
+      <circle cx="24" cy="14" r="2" fill="#d97757"/>
+      <circle cx="15" cy="30" r="2" fill="#6a9bcc"/>
+      <circle cx="33" cy="30" r="2" fill="#788c5d"/>
+    </svg>
+    <div>
+      <div class="wordmark">agy</div>
+      <div class="wordmark-sub">antigravity workspace</div>
+    </div>
+  </header>
+
+  <section class="rail-block">
+    <div class="label">account</div>
+    <div class="account" id="account-email">loading…</div>
+    <div class="account-meta" id="account-tier">—</div>
+  </section>
+
+  <section class="rail-block">
+    <div class="label">model <span class="label-note" id="model-source"></span></div>
+    <select id="model-select" class="select" aria-label="model"></select>
+    <div class="model-meta" id="model-meta">—</div>
+  </section>
+
+  <section class="rail-block">
+    <div class="label">thinking <span class="label-note" id="thinking-note"></span></div>
+    <div class="chips" id="thinking-chips" role="group" aria-label="thinking level"></div>
+    <div class="budget-row">
+      <label class="micro" for="thinking-budget">budget</label>
+      <input class="budget-input" id="thinking-budget" type="number" min="0" max="32768" step="256" inputmode="numeric" aria-label="thinking budget in tokens">
+      <span class="micro" id="budget-unit">tokens</span>
+    </div>
+    <div class="micro" id="thinking-help">controls reasoning budget per request</div>
+  </section>
+
+  <section class="rail-block grow">
+    <div class="label">quota</div>
+    <div id="quota" class="quota">loading…</div>
+  </section>
+
+  <footer class="rail-foot">
+    <div class="endpoint"><span class="dot ok"></span><code id="endpoint">127.0.0.1</code></div>
+    <div class="endpoint muted" id="key-state">key —</div>
+  </footer>
+</aside>
+
+<main class="stage">
+  <header class="stage-head">
+    <div class="head-left">
+      <div class="tabs" role="tablist" aria-label="view">
+        <button class="tab active" data-view="api" role="tab" aria-selected="true">api</button>
+        <button class="tab" data-view="chat" role="tab" aria-selected="false">chat</button>
+      </div>
+      <h1 id="stage-title">api</h1>
+      <p class="lede" id="stage-lede">Keys for this app, then point any client at the endpoint. Chat is the same engine with a window around it.</p>
+    </div>
+    <div class="head-right">
+      <div class="pill" id="pill-model">—</div>
+      <button class="btn ghost" id="new-chat" type="button" hidden>clear</button>
+    </div>
+  </header>
+
+  <section class="view" id="view-api">
+    <div class="view-scroll">
+      <div class="card">
+        <div class="card-head">
+          <div class="label">base url</div>
+          <div class="micro">openai + claude shapes</div>
+        </div>
+        <div class="endpoint-line">
+          <code id="api-url">http://127.0.0.1:8790/v1</code>
+          <button class="btn ghost small" id="copy-url" type="button">copy</button>
+        </div>
+        <p class="micro">The key gates this app. The Google OAuth pair that reaches the backend stays in the credential store — never here.</p>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <div class="label">keys</div>
+          <div class="micro" id="keys-count">—</div>
+        </div>
+        <div class="key-new">
+          <input id="key-name" class="text-input" placeholder="name — e.g. cline, laptop, ci" maxlength="40" />
+          <button class="btn" id="key-create" type="button">create key</button>
+        </div>
+        <table class="keys" id="keys-table">
+          <thead>
+            <tr><th>name</th><th>key</th><th>created</th><th>last used</th><th>req</th><th>actions</th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+        <p class="micro" id="keys-file">—</p>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <div class="label">quickstart</div>
+          <div class="tabs small" id="snippet-tabs">
+            <button class="tab active" data-snippet="curl" type="button">curl</button>
+            <button class="tab" data-snippet="python" type="button">python</button>
+            <button class="tab" data-snippet="node" type="button">node</button>
+          </div>
+        </div>
+        <pre class="snippet" id="snippet"></pre>
+        <p class="micro">Copy on a key fills it into these snippets.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="view" id="view-chat" hidden>
+    <div class="chat-bar">
+      <select id="chat-model" class="select light" aria-label="model"></select>
+      <span class="micro">thinking</span>
+      <input id="chat-budget" class="text-input inline" type="number" min="0" max="32768" step="256" inputmode="numeric" aria-label="thinking budget in tokens">
+      <span class="micro">tok</span>
+      <div class="chat-actions">
+        <button class="btn ghost small" id="btn-refresh" type="button">refresh</button>
+        <button class="btn ghost small" id="btn-stop" type="button" hidden>stop</button>
+        <button class="btn ghost small" id="btn-regen" type="button">regenerate</button>
+        <button class="btn ghost small" id="btn-clear" type="button">clear</button>
+        <button class="btn ghost small" id="btn-bottom" type="button">bottom</button>
+      </div>
+    </div>
+    <div class="transcript" id="transcript">
+      <div class="empty" id="empty">
+        <div class="empty-rule"></div>
+        <p class="empty-title">Nothing on the bench yet.</p>
+        <p class="empty-body">Type below, or take one of these:</p>
+        <div class="seeds" id="seeds">
+          <button type="button" data-seed="Explain the difference between a read-write lock and a mutex in three sentences.">rwlock vs mutex</button>
+          <button type="button" data-seed="Write a PowerShell one-liner that lists the ten largest files under the current directory.">powershell: big files</button>
+          <button type="button" data-seed="I have a 400 MB Go binary. Explain what a Go string constant is and why scanning it for credentials can over-read into the next string.">go string constants</button>
+        </div>
+      </div>
+    </div>
+
+    <form class="composer" id="composer" onsubmit="return false">
+      <textarea id="input" rows="1" placeholder="Ask anything. Enter sends, Shift+Enter breaks the line."></textarea>
+      <div class="composer-actions">
+        <span class="hint" id="hint">thinking: model default</span>
+        <button class="btn send" id="send" type="submit">send</button>
+      </div>
+    </form>
+  </section>
+</main>
+
+<aside class="telemetry">
+  <header class="tele-head">
+    <div class="label">reasoning</div>
+    <div class="live" id="live"><span class="dot idle"></span><span id="live-text">idle</span></div>
+  </header>
+
+  <div class="think-card" id="think-card">
+    <div class="think-empty" id="think-empty">thoughts stream here, in the order the model spends them.</div>
+    <pre class="think-stream" id="think-stream"></pre>
+  </div>
+
+  <section class="meters">
+    <div class="meter"><span>ttft</span><b id="m-ttft">—</b></div>
+    <div class="meter"><span>elapsed</span><b id="m-elapsed">—</b></div>
+    <div class="meter"><span>tokens</span><b id="m-tokens">—</b></div>
+    <div class="meter"><span>thoughts</span><b id="m-think">—</b></div>
+  </section>
+
+  <section class="tele-block">
+    <div class="label">backend</div>
+    <div class="kv"><span>path</span><code id="b-path">—</code></div>
+    <div class="kv"><span>creds</span><code id="b-creds">—</code></div>
+    <div class="kv"><span>alias</span><code id="b-alias">—</code></div>
+  </section>
+
+  <section class="tele-block grow">
+    <div class="label">self-check</div>
+    <button class="btn ghost wide" id="doctor" type="button">run doctor</button>
+    <ul class="checks" id="checks"></ul>
+  </section>
+
+  <footer class="tele-foot">
+    <span>api</span>
+    <code id="api-base">http://127.0.0.1:8790/v1</code>
+  </footer>
+</aside>
+
+<script src="keys-view.js?v=3"></script>
+<script src="app.js?v=12"></script>
+<script src="chat-controls.js?v=1"></script>
+</body>
+</html>

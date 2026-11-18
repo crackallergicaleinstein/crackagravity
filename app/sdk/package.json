@@ -1,0 +1,8 @@
+{
+  "name": "openai",
+  "version": "0.0.0-local-shim",
+  "description": "Minimal drop-in for the `openai` package surface used by agy-app. Not the real SDK.",
+  "type": "module",
+  "main": "./openai.mjs",
+  "exports": { ".": "./openai.mjs" }
+}
