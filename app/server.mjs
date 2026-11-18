@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * agy-app — one Windows app: UI + OpenAI-compatible API over the Antigravity
+ * crackagravity — one Windows app: UI + OpenAI-compatible API over the Antigravity
  * backend, with per-request thinking control.
  *
  * What it serves
@@ -23,12 +23,12 @@ import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { spawn } from 'node:child_process';
 
-import { streamGenerate, generate, quota, loadCodeAssist, availableModels, toFunctionDeclarations, resolveBudget } from '../agy-direct/lib/client.mjs';
-import { catalog as modelCatalog, DEFAULT_MODEL, clearModelCache } from '../agy-direct/lib/models.mjs';
-import { identity, ensureReady, syncFromKeyring } from '../agy-direct/lib/token.mjs';
-import { accounts } from '../agy-direct/lib/pool.mjs';
-import * as keys from '../agy-direct/lib/keys.mjs';
-import { loadConfig, saveConfig, loadCache, findBinary, paths } from '../agy-direct/lib/discover.mjs';
+import { streamGenerate, generate, quota, loadCodeAssist, availableModels, toFunctionDeclarations, resolveBudget } from '../core/lib/client.mjs';
+import { catalog as modelCatalog, DEFAULT_MODEL, clearModelCache } from '../core/lib/models.mjs';
+import { identity, ensureReady, syncFromKeyring } from '../core/lib/token.mjs';
+import { accounts } from '../core/lib/pool.mjs';
+import * as keys from '../core/lib/keys.mjs';
+import { loadConfig, saveConfig, loadCache, findBinary, paths } from '../core/lib/discover.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const UI_DIR = path.join(HERE, 'ui');
@@ -744,7 +744,7 @@ async function appChat(req, res) {
   try {
     const last = [...history].reverse().find((m) => m.role === 'user');
     const preview = String(last?.content || '').replace(/\s+/g, ' ').slice(0, 120);
-    const logDir = path.join(process.env.LOCALAPPDATA || os.tmpdir(), 'agy-app');
+    const logDir = path.join(process.env.LOCALAPPDATA || os.tmpdir(), 'crackagravity');
     fs.mkdirSync(logDir, { recursive: true });
     fs.appendFileSync(path.join(logDir, 'requests.log'),
       `${new Date().toISOString()} chat model=${model} budget=${norm.budget} msgs=${history.length} chars=${preview.length} :: ${preview}\n`);
@@ -877,7 +877,7 @@ const server = http.createServer(async (req, res) => {
       try { who = identity(); } catch { who = {}; }
       return sendJson(res, 200, {
         ok: true,
-        app: 'agy-app',
+        app: 'crackagravity',
         port: PORT,
         account: who.email || null,
         models: (await modelCatalog().catch(() => ({ models: [] }))).models.filter((m) => m.addressable).length,
@@ -1058,7 +1058,7 @@ function openWindow() {
 /* Keep a single bad request from taking the whole app down. */
 process.on('uncaughtException', (e) => {
   if (e && e.code === 'EADDRINUSE') {
-    console.error(`port ${PORT} already in use — another agy-app is running`);
+    console.error(`port ${PORT} already in use — another crackagravity is running`);
     process.exit(1);
   }
   console.error(`uncaught: ${e && e.stack ? e.stack.split('\n').slice(0, 4).join(' | ') : e}`);
@@ -1075,7 +1075,7 @@ server.listen(PORT, HOST, () => {
   } catch (e) {
     console.error("keys      " + e.message);
   }
-  console.log(`agy-app  http://${HOST}:${PORT}/`);
+  console.log(`crackagravity  http://${HOST}:${PORT}/`);
   console.log(`api      http://${HOST}:${PORT}/v1   key: required (${keys.list().length} stored)`);
   console.log(`state    ${paths.CACHE_DIR}`);
   ensureReady()

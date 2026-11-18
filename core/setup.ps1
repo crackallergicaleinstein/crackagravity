@@ -1,8 +1,8 @@
-# agy-direct setup - resolves the install, checks the OAuth chain, mints a local
+# core setup - resolves the install, checks the OAuth chain, mints a local
 # API key, and prints the client config. Safe to re-run on any machine.
 #
-#   powershell -ExecutionPolicy Bypass -File agy-direct\setup.ps1
-#   powershell -ExecutionPolicy Bypass -File agy-direct\setup.ps1 -Port 8787 -Start
+#   powershell -ExecutionPolicy Bypass -File core\setup.ps1
+#   powershell -ExecutionPolicy Bypass -File core\setup.ps1 -Port 8787 -Start
 
 [CmdletBinding()]
 param(
@@ -20,7 +20,7 @@ $server = Join-Path $here 'server.mjs'
 function Say([string]$msg) { if (-not $Quiet) { Write-Host $msg } }
 
 Say ''
-Say 'agy-direct setup'
+Say 'core setup'
 Say '================'
 
 # node
@@ -82,11 +82,11 @@ Say ''
 Say 'point any OpenAI-compatible client at:'
 Say "  base_url   http://${BindHost}:${Port}/v1"
 Say "  api_key    $key"
-Say '  model      gemini-3.8-flash-low     (or: node agy-direct\cli.mjs --pick)'
+Say '  model      gemini-3.8-flash-low     (or: node core\cli.mjs --pick)'
 Say ''
 Say 'sanity:'
 Say "  curl http://${BindHost}:${Port}/v1/models -H `"Authorization: Bearer $key`""
-Say '  node agy-direct\cli.mjs --selftest'
+Say '  node core\cli.mjs --selftest'
 
 if ($Start) {
     Say ''

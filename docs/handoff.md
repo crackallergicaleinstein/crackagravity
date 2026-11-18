@@ -14,22 +14,22 @@ the runbook.
 | Path | What it is | State |
 |---|---|---|
 | [report.md](report.md) | Full findings: architecture, jackpots, severity table, repro | current, verified |
-| [agy-direct/server.mjs](agy-direct/server.mjs) | **OpenAI-compatible shim straight to `v1internal:streamGenerateContent` over the account's Google OAuth token — no `agy.exe`, no system prompt, no rater; tools, streaming, quota, doctor** | tested end to end |
-| [agy-direct/lib/token.mjs](agy-direct/lib/token.mjs) | Keyring → refresh-token cache → access-token mint, with rotation and pair re-discovery on 400/401 | tested, self-heals |
-| [agy-direct/lib/discover.mjs](agy-direct/lib/discover.mjs) | Binary scan for the OAuth client pair, credential-target enumeration, fingerprint-keyed cache | tested, self-heals |
-| [agy-direct/lib/client.mjs](agy-direct/lib/client.mjs) | Envelope build, SSE parse, tool-call mapping, `quota`, `loadCodeAssist` | tested |
-| [agy-direct/cli.mjs](agy-direct/cli.mjs) | Prompt, model picker, live probe, doctor, key-gen, selftest | tested |
-| [agy-direct/setup.ps1](agy-direct/setup.ps1) | One-shot bootstrap: node check, chain check, key mint, client config | tested, ASCII-only |
-| [agy-direct/start.ps1](agy-direct/start.ps1) | Launcher, path-independent | tested |
+| [core/server.mjs](core/server.mjs) | **OpenAI-compatible shim straight to `v1internal:streamGenerateContent` over the account's Google OAuth token — no `agy.exe`, no system prompt, no rater; tools, streaming, quota, doctor** | tested end to end |
+| [core/lib/token.mjs](core/lib/token.mjs) | Keyring → refresh-token cache → access-token mint, with rotation and pair re-discovery on 400/401 | tested, self-heals |
+| [core/lib/discover.mjs](core/lib/discover.mjs) | Binary scan for the OAuth client pair, credential-target enumeration, fingerprint-keyed cache | tested, self-heals |
+| [core/lib/client.mjs](core/lib/client.mjs) | Envelope build, SSE parse, tool-call mapping, `quota`, `loadCodeAssist` | tested |
+| [core/cli.mjs](core/cli.mjs) | Prompt, model picker, live probe, doctor, key-gen, selftest | tested |
+| [core/setup.ps1](core/setup.ps1) | One-shot bootstrap: node check, chain check, key mint, client config | tested, ASCII-only |
+| [core/start.ps1](core/start.ps1) | Launcher, path-independent | tested |
 | [app/server.mjs](app/server.mjs) | **The app: API tab + key store + chat, `/api/*` + `/v1/*`, OpenAI and Claude shapes, thinking budgets, SSE heartbeat** | tested, 14/14 selftest |
-| [agy-direct/lib/keys.mjs](agy-direct/lib/keys.mjs) | Local API key store: create, reveal, rotate, enable, revoke, last-used counters | tested |
+| [core/lib/keys.mjs](core/lib/keys.mjs) | Local API key store: create, reveal, rotate, enable, revoke, last-used counters | tested |
 | [app/ui/](app/ui/index.html) | Vanilla HTML/CSS/JS window: model picker, thinking chips, live reasoning panel, quota bars | done |
 | [app/sdk/openai.mjs](app/sdk/openai.mjs) | Drop-in for the `openai` package surface (`chat.completions.create`, `models.list`) | tested |
-| [app/agy-app.cmd](app/agy-app.cmd) | Double-click launcher; `launch.ps1` starts the server and opens the Edge app window | tested |
+| [app/crackagravity.cmd](app/crackagravity.cmd) | Double-click launcher; `launch.ps1` starts the server and opens the Edge app window | tested |
 | [app/README.md](app/README.md) | App runbook: UI, API shapes, pool, fallback, heartbeat | current |
-| [agy-direct/lib/pool.mjs](agy-direct/lib/pool.mjs) | Multi-account rotation with cooldown, auto-disable, per-account token cache | tested |
-| [notes/antigravity2api-review.md](notes/antigravity2api-review.md) | Review of liuw1535/antigravity2api-nodejs and what was ported | current || [agy-direct/README.md](agy-direct/README.md) | The direct lane: token source, request shape, update recovery, models/tiers, tool calling, API surface | current |
-| [agy-api/server.mjs](agy-api/server.mjs) | OpenAI-compatible HTTP shim over `agy -p` (chat + models, queue, timeout, optional bearer) — keeps the harness prompt | tested end to end |
+| [core/lib/pool.mjs](core/lib/pool.mjs) | Multi-account rotation with cooldown, auto-disable, per-account token cache | tested |
+| [notes/antigravity2api-review.md](notes/antigravity2api-review.md) | Review of liuw1535/antigravity2api-nodejs and what was ported | current || [core/README.md](core/README.md) | The direct lane: token source, request shape, update recovery, models/tiers, tool calling, API surface | current |
+| [legacy-shim/server.mjs](legacy-shim/server.mjs) | OpenAI-compatible HTTP shim over `agy -p` (chat + models, queue, timeout, optional bearer) — keeps the harness prompt | tested end to end |
 | [hub/hub.mjs](hub/hub.mjs) | Hub client: discover daemon, `info`, `models`, `read`, `rpc`, `terminal`, `close` | tested |
 | [mitm/proxy.mjs](mitm/proxy.mjs) | Loopback CONNECT proxy, terminates TLS with local CA, dumps and rewrites requests | tested |
 | [mitm/install.ps1](mitm/install.ps1) | Persists env vars + startup proxy + trusts CA; `-Uninstall` reverses | written, **not executed** |
@@ -81,7 +81,7 @@ Auth: Google OAuth via provider `antigravity_auth`; scopes `aicode`, `cclog`,
 `gemini-4-hydrogen-*`, `gemini-3.8-flash-*`, `gemini-2.5-*`, `gpt-oss-120b-medium`,
 `gemini-pro-orchestrator-g1-pro`. Quota is server-side per account.
 
-Shim: `node agy-api\server.mjs` → `http://127.0.0.1:8787/v1` (`/chat/completions`,
+Shim: `node legacy-shim\server.mjs` → `http://127.0.0.1:8787/v1` (`/chat/completions`,
 `/models`). Verified: `shim-ok` in 7.1 s, `prompt_tokens 21830` (harness overhead included).
 
 ### 3.3 The system prompt is client-built and removable
@@ -316,8 +316,8 @@ the server gates on it with no env var (`Authorization: Bearer`, `x-api-key`,
 whole contract — 9/9: health, 401 without key on models and chat, models with
 key, `x-api-key` header, chat, SSE stream, tool call, quota endpoint.
 
-**Setup on any machine:** `agy-direct/setup.ps1` (node check, chain check, key
-mint, model table, client config, `-Start` to launch) and `agy-direct/start.ps1`.
+**Setup on any machine:** `core/setup.ps1` (node check, chain check, key
+mint, model table, client config, `-Start` to launch) and `core/start.ps1`.
 Both resolve `$PSScriptRoot`; the folder can live anywhere. `setup.ps1` is
 ASCII-only after a box-drawing character made PowerShell 5 fail to parse the
 first version.
@@ -326,7 +326,7 @@ first version.
 
 ### 3.12 The app — one window, one API
 
-`app/` is the product. `app\agy-app.cmd` starts the server and opens an Edge
+`app/` is the product. `app\crackagravity.cmd` starts the server and opens an Edge
 `--app` window on `http://127.0.0.1:8790/`; the same port serves
 OpenAI (`/v1/chat/completions`), Claude (`/v1/messages`), models, quota and tier.
 
@@ -355,7 +355,7 @@ automatically raised by the budget, because thoughts count against the output ca
 - *Upstream fallback* `daily → sandbox → production`, moving only for network
   errors and 5xx and never after the first byte. Same day, same token:
   `production` 429, `daily` 200, `sandbox` 200.
-- *Account pool* (`agy-direct/lib/pool.mjs`): more than one refresh token in
+- *Account pool* (`core/lib/pool.mjs`): more than one refresh token in
   `accounts.json` rotates per request; 429 → exponential cooldown, 403 → ten
   minutes and disabled after three, `invalid_grant` → disabled at once. Tested
   with one live and one fake account: three requests answered, fake one disabled,
@@ -377,7 +377,7 @@ engine, window around it.
 
 Verified lifecycle: create → use → 200, revoke → 401, rotate → old key 401 and
 new key 200.
-`node agy-direct\cli.mjs --selftest` boots the app on a throwaway port and runs
+`node core\cli.mjs --selftest` boots the app on a throwaway port and runs
 14 checks — health, 401 without key, models, `x-api-key`, chat, stream, tool call,
 thinking events, Claude message, Claude stream, thinking budget, key lifecycle,
 quota: **14/14**.
@@ -394,22 +394,22 @@ node hub\hub.mjs read "$env:USERPROFILE\.gemini\config\config.json"
 node hub\hub.mjs rpc GetAuthStatus '{}'
 
 # OpenAI-compatible shim over the account's models, direct (recommended)
-powershell -ExecutionPolicy Bypass -File agy-direct\setup.ps1     # node, chain, key, config
-node agy-direct\cli.mjs --doctor          # binary, creds, keyring, token, tier, quota, catalog, key
-node agy-direct\cli.mjs --recheck         # drop cached creds, rescan the install
-node agy-direct\cli.mjs --models --quota  # live catalog for this account/tier
-node agy-direct\cli.mjs --pick            # numbered picker, saves default
-node agy-direct\cli.mjs --probe           # request every Google model, report OK/FAIL
-node agy-direct\cli.mjs --key-gen         # mint the local API key
-node agy-direct\cli.mjs --selftest        # boot on a throwaway port, prove the contract
-node agy-direct\cli.mjs --tier
-node agy-direct\cli.mjs "hi" --model gemini-3.8-flash-low
-powershell -ExecutionPolicy Bypass -File agy-direct\start.ps1 -Port 8787
+powershell -ExecutionPolicy Bypass -File core\setup.ps1     # node, chain, key, config
+node core\cli.mjs --doctor          # binary, creds, keyring, token, tier, quota, catalog, key
+node core\cli.mjs --recheck         # drop cached creds, rescan the install
+node core\cli.mjs --models --quota  # live catalog for this account/tier
+node core\cli.mjs --pick            # numbered picker, saves default
+node core\cli.mjs --probe           # request every Google model, report OK/FAIL
+node core\cli.mjs --key-gen         # mint the local API key
+node core\cli.mjs --selftest        # boot on a throwaway port, prove the contract
+node core\cli.mjs --tier
+node core\cli.mjs "hi" --model gemini-3.8-flash-low
+powershell -ExecutionPolicy Bypass -File core\start.ps1 -Port 8787
 curl http://127.0.0.1:8787/v1/models
 curl http://127.0.0.1:8787/v1/doctor
 
 # the app: UI + API on one port
-app\agy-app.cmd
+app\crackagravity.cmd
 powershell -ExecutionPolicy Bypass -File app\launch.ps1 -Port 8790
 node tools\capture-demo.mjs               # refresh the replay used by /?demo=1
 curl http://127.0.0.1:8790/v1/messages -H "content-type: application/json" `
@@ -417,7 +417,7 @@ curl http://127.0.0.1:8790/v1/messages -H "content-type: application/json" `
   -d '{"model":"gemini-3.8-flash-low","max_tokens":80,"messages":[{"role":"user","content":"hi"}]}'
 
 # legacy shim: one agy.exe per request, harness prompt included
-node agy-api\server.mjs
+node legacy-shim\server.mjs
 curl http://127.0.0.1:8787/v1/models
 
 # capture traffic (trusts mitm\ca.crt already present in user root store)
@@ -443,9 +443,9 @@ Proxy env knobs: `MITM_MODE=dump|strip`, `MITM_PROMPT`, `MITM_STRIP_TOOLS`,
 
 - `agy acp` (stdio JSON-RPC) and `--input-format stream-json` were never exercised — a
   programmatic client there would remove the per-call 230 MB process spawn. **Superseded by
-  `agy-direct/`, which removes the spawn entirely by talking to `v1internal` directly.**
+  `core/`, which removes the spawn entirely by talking to `v1internal` directly.**
 - `customModelsConfig` schema (jetbox_state_pb) not mapped; would unlock the gateway path.
-- OAuth: refresh is implemented (`agy-direct/lib/token.mjs`); the interactive login that
+- OAuth: refresh is implemented (`core/lib/token.mjs`); the interactive login that
   *creates* the first refresh token is not — the token is lifted from the installed
   client's keyring. A standalone device/loopback flow would need the consent screen the
   desktop client id does not expose.

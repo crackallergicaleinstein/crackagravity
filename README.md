@@ -1,91 +1,102 @@
-# agy — Antigravity as an OpenAI / Claude endpoint
+# crackagravity
 
-A local Windows app and HTTP API that answers with the **account's own
-Antigravity quota** — the same models, the same backend — without the agent
-harness that ships inside `agy.exe`.
+**Antigravity limits, but for whatever the fuck you want to do with them.**
 
-Point any OpenAI-compatible client (Cline, Roo, Continue, aider, the `openai`
-SDK) or any Claude-native client at `http://127.0.0.1:8790/v1` and it works.
-Same port, same key store, one window with an API tab and a chat tab.
+You have a Google account sitting in the Antigravity client. That client burns
+your quota on 16.5k tokens of its own fucking system prompt before your question
+even lands. This repo takes the same quota, the same models, the same backend —
+and strips every last bit of that vendor scaffolding out of the request.
 
-![API tab](docs/images/api.png)
+No harness prompt. No 14-tool roster. No "Proctor" rater sniffing your tool
+calls. No 235 MB process shat out per turn. No hub. Just one HTTPS POST with
+your actual fucking message in it.
+
+![api tab](docs/images/api.png)
 
 ---
 
-## Why this exists
+## Read this before you touch anything, idiot
 
-Antigravity's CLI (`agy.exe`) can answer without an API key, which means it can
-answer on the account's subscription quota. But every call it makes carries the
-vendor's own agent scaffolding:
+The stock CLI (`agy -p "hi"`) costs **21,830 prompt tokens** for a three-word
+answer. Why? Because every call drags this bullshit along:
 
-| what the stock client sends | cost |
+| shit the stock client sends | what it costs you |
 |---|---|
-| `request.systemInstruction` — 65,891 chars of client-built prompt | ~16.5k tokens |
-| `request.tools` — 14 tool declarations | ~5k tokens |
-| a separate `agent_monitoring` "Proctor" rater request per tool call | 2,704 tokens |
-| one 235 MB `agy.exe` process per turn | ~7 s startup |
+| `request.systemInstruction` — 65,891 characters of vendor prompt | ~16,500 tokens |
+| `request.tools` — 14 tool declarations you never asked for | ~5,000 tokens |
+| a whole second request (`agent_monitoring`) to a "safety rater" per tool call | 2,704 tokens |
+| one 235 MB `agy.exe` process, per turn | ~7 seconds of your life |
 
-Measured for the same three-word reply: **21,830 prompt tokens** through
-`agy -p`, versus **6–38 prompt tokens** on the direct path this repo implements.
+All of that lives in the **client**. That's the whole trick, and it took reading
+the binary to see it. This repo sends **6–38 prompt tokens** for the same answer.
+That's not an optimisation. That's deleting the middleman and his bullshit fee.
 
-The prompt, the tools, the rater and the hub are all **client-side** — that is
-the whole finding this project is built on. The model does not need them.
+## What's actually bypassed (and what the fuck isn't)
 
-## What it bypasses, and what it does not
+**Gone, because it was client-side theatre:**
 
-**Removed here, because it lives in the client:**
+- the 16.5k system prompt — not sent, not needed
+- the 14 tool declarations and the agent loop that drove them
+- the Proctor / `agent_monitoring` rater — never called, because no tool call is pending
+- the 235 MB process spawn — replaced by one `fetch`
+- the local hub control plane and its plaintext CSRF token
+- the telemetry cosplay some other proxies do (`unleash`, `recordTrajectoryAnalytics`, fake logs). This repo does **not** lick that boot. No fake client registration, none.
 
-- the 16.5k-token system prompt (`POST /v1internal:streamGenerateContent` body)
-- the 14 tool declarations, and the agent loop that drove them
-- the `agent_monitoring` / Proctor tool-call rater request
-- the 235 MB process spawn per turn
-- the local "hub" control plane and its plaintext CSRF token
-- the official-client telemetry replay some proxies perform (this project does
-  **not** fake it)
+**Still there, because it's Google's server, not your client:**
 
-**Not bypassed, because it lives on Google's side:**
+- the content filter on request text. It comes back as a perfectly normal `200`
+  with `This request was blocked by Gemini's filters…` in the candidate text.
+  No transport trick has ever moved that, and this repo doesn't pretend to.
+- model refusals. The model is the model, you muppet.
+- per-account quota. `gemini-weekly`, `gemini-5h`, `3p-weekly`, `3p-5h`,
+  `gemini-argon-wtu-weekly`. `/v1/quota` shows you the real numbers.
 
-- the content filter on request text. It arrives as a perfectly normal HTTP 200
-  whose candidate text reads `This request was blocked by Gemini's filters…`
-- model-level refusals
-- per-account quota (`gemini-weekly`, `gemini-5h`, `3p-weekly`, `3p-5h`,
-  `gemini-argon-wtu-weekly`)
+If you came here for "bypass Gemini's filter", fuck off to a different repo. If
+you came here because the official client wastes 99.7% of your tokens on
+scaffolding, welcome, sit down, this is the one.
 
-Transport tricks never moved those, and this project does not pretend to. What
-changes is cost, latency and integration.
+## Does the Antigravity window need to be open?
 
-## Is the Antigravity window needed?
+**No, and this is the part that makes people's heads fall off.** The app talks
+straight to `daily-cloudcode-pa.googleapis.com`. The IDE, the CLI binary, the
+hub — close all of it, uninstall the CLI if you want.
 
-**No.** The app talks straight to `daily-cloudcode-pa.googleapis.com`. The IDE,
-the CLI binary and the local hub can all be closed. What it needs from the
-installed client is exactly one thing: the **OAuth refresh token** the client
-already wrote into the Windows Credential Manager (`gemini:antigravity`). It
-reads it once, caches it, and refreshes on its own from then on.
+The only thing it needs from that install is the **OAuth refresh token** the
+client already dumped into Windows Credential Manager (`gemini:antigravity`).
+Read once, cached, refreshed by this repo from then on. That's it.
 
-If the client is uninstalled, the token keeps working until Google revokes it.
-If the binary is gone, the built-in OAuth client pair is used. If the credential
-store is empty, seed a token with `--login-token`.
+- no credential store entry? `--login-token <refresh_token>`
+- no binary? set `AGY_CLIENT_ID` / `AGY_CLIENT_SECRET` (or install the client once)
+- nothing at all? then you have nothing to sell, go sign in somewhere
 
-## Quickstart
+## Install, and don't pretend this is hard
+
+You need Windows (the credential discovery is wincred), Node 20+, and one
+sign-in in the Antigravity client sometime in your life. No npm install. No
+build step. No bundled 8 MB mystery binary you can't audit. Nothing to compile,
+you absolute gremlin — it's JavaScript, "compile" here means "make sure Node
+isn't ancient".
 
 ```powershell
-git clone <this repo> agy
-cd agy
+git clone https://github.com/crackallergicaleinstein/crackagravity
+cd crackagravity
 
-# one-time: resolve the install, check the chain, mint a local API key
-powershell -ExecutionPolicy Bypass -File agy-direct\setup.ps1
+# one-time: find the install, verify the chain, mint your local API key
+powershell -ExecutionPolicy Bypass -File core\setup.ps1
 
-# open the app (starts the server, opens its own window)
-app\agy-app.cmd
+# open the fucking app
+app\crackagravity.cmd
 ```
 
-Requirements: Windows, Node 20+, and an Antigravity install you have signed into
-once. No npm packages, no bundled binaries, no build step.
+That's the whole installation. If `node` isn't on PATH, that's a you problem —
+install it like a grown-up, then run it again. If `setup.ps1` tells you the
+keyring check failed, it means you never signed into Antigravity on this
+machine; do that once, then stop crying and re-run it.
 
-## Use it as an API
+## Plug it into whatever you're running
 
-The app serves an OpenAI-compatible surface **and** a Claude-compatible one on
-the same port. Keys are `agy_…`, created and revoked in the **API** tab.
+Two shapes on one port. OpenAI-compatible, Claude-compatible. Keys are `agy_…`,
+made and killed in the **API** tab.
 
 ```python
 from openai import OpenAI
@@ -94,7 +105,7 @@ client = OpenAI(base_url="http://127.0.0.1:8790/v1", api_key="agy_…")
 
 r = client.chat.completions.create(
     model="gemini-3.8-flash-low",
-    thinking_budget=8192,          # token budget: 512 … 32768, 0 = off
+    thinking_budget=8192,      # tokens, not vibes. 512…32768, 0 = shut it up
     messages=[{"role": "user", "content": "hi"}],
 )
 print(r.choices[0].message.content)
@@ -109,98 +120,103 @@ curl http://127.0.0.1:8790/v1/messages \
        "messages":[{"role":"user","content":"hi"}]}'
 ```
 
-| endpoint | shape |
+| endpoint | what it does |
 |---|---|
-| `POST /v1/chat/completions` | OpenAI — stream, non-stream, `tools`, `tool_choice`, `reasoning_effort`, `thinking_budget` |
-| `POST /v1/messages` | Claude Messages — stream, non-stream, `tools.input_schema`, `thinking.budget_tokens` |
-| `POST /v1/completions` | legacy text completion |
+| `POST /v1/chat/completions` | OpenAI: stream, non-stream, `tools`, `tool_choice`, `reasoning_effort`, `thinking_budget` |
+| `POST /v1/messages` | Claude: stream, non-stream, `tools.input_schema`, `thinking.budget_tokens` |
+| `POST /v1/completions` | grandma mode, text completion |
 | `GET /v1/models`, `/v1/models/{id}` | live per-account catalog, `?quota=1`, `?refresh=1` |
-| `GET /v1/quota`, `/v1/tier` | quota buckets, tier, project |
-| `GET /health`, `/v1/doctor` | self-check, no model quota consumed |
+| `GET /v1/quota`, `/v1/tier` | real buckets, tier, project |
+| `GET /health`, `/v1/doctor` | self-check without burning quota |
 
-Key headers: `Authorization: Bearer`, `x-api-key`, `api-key`. A legacy
-`AGY_TOKEN` or `config.api_key` keeps working alongside the store.
+Auth: `Authorization: Bearer`, `x-api-key`, or `api-key`. Old `AGY_TOKEN` and
+`config.api_key` still work if you're migrating, you lazy sod.
 
-## Thinking control is a number, not a word
+## Thinking is a number, not a personality
 
-The wire knob is `generationConfig.thinkingConfig.thinkingBudget`. Words are UI
-convenience presets that map to budgets; a word the model does not carry is a
-hard 400 from the backend (`Thinking level MINIMAL is not supported…`), which is
-why budgets ship instead.
+The wire knob is `generationConfig.thinkingConfig.thinkingBudget`. The words in
+the UI are just presets that write that number. Send a word the model doesn't
+carry and the backend spits a 400 at you — `Thinking level MINIMAL is not
+supported for this model` — which is why the number is what ships.
 
-| budget | thought tokens spent (same prompt) |
+| budget | thought tokens it actually spent |
 |---|---|
 | 1024 | 153 |
 | 8192 | 348 |
 | 30000 | 1218 |
 
-Thoughts stream to `delta.reasoning` (OpenAI), `thinking_delta` (Claude), and the
-app's reasoning panel. `max_tokens` is raised by the budget automatically,
-because thoughts count against the output cap.
+Same prompt, three budgets, three real measurements. Thoughts stream to
+`delta.reasoning` (OpenAI), `thinking_delta` (Claude), and the app's reasoning
+panel. `max_tokens` gets raised by the budget automatically because thoughts
+count against the output cap — otherwise you'd cap your own answer and look
+confused about it.
 
 ## The app
 
 ![chat tab](docs/images/chat.png)
 
-Two views:
+Two tabs, because the API is the point:
 
-**API** (default) — base URL with copy, the key table (create / copy / rotate /
-disable / revoke, last-used time and request count per key), and curl / python /
-node quickstarts that carry the key you picked.
+**API** (default) — base URL with copy, the key table, quickstarts in curl /
+python / node that carry the key you clicked. Create, copy, rotate, disable,
+revoke. Last-used time and request count per key, so you can see which key is
+dead instead of guessing like an idiot.
 
-**Chat** — the same engine with a window: model picker, thinking chips plus a
-numeric budget box, live reasoning panel with TTFT / elapsed / tokens / thought
-tokens, and a toolbar with refresh, stop, regenerate, clear and scroll-to-bottom.
-History persists across window restarts.
+**Chat** — same engine with a window: model picker, thinking presets plus a bare
+token budget box, live reasoning panel with TTFT / elapsed / tokens / thoughts,
+and a toolbar with refresh, stop, regenerate, clear and jump-to-bottom. History
+survives window restarts. Yes, an app is supposed to have these. You're welcome.
 
-## How it works
+## How it works, for the two of you who care
 
 ```
-app\agy-app.cmd
-  └─ app/server.mjs                        UI + /api/* + /v1/*
-       └─ agy-direct/lib/client.mjs        one HTTPS POST per turn
+app\crackagravity.cmd
+  └─ app/server.mjs                      UI + /api/* + /v1/*
+       └─ core/lib/client.mjs            one HTTPS POST per turn
             └─ daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent
-                 Authorization: Bearer <access token from the refresh token>
+                 Authorization: Bearer <access token minted from your refresh token>
 ```
 
-Credential chain (all discovered, nothing hardcoded to a path):
+Credential chain, all discovered, nothing hardcoded to your machine:
 
-1. **refresh token** — Windows Credential Manager, every generic credential is
-   scanned and the one carrying a Google refresh token is adopted
-2. **OAuth client id/secret** — extracted from the installed `agy.exe` and each
-   pair verified against `oauth2.googleapis.com/token` before use
+1. **refresh token** — every generic wincred entry is scanned, the one with a
+   Google refresh token in it gets adopted
+2. **OAuth client id/secret** — pulled out of the installed `agy.exe`, each pair
+   verified against `oauth2.googleapis.com/token` before it's used
 3. **binary** — `AGY_BIN` → config → known dirs → registry uninstall entries →
-   running process → `PATH` → bounded scan; only `agy*.exe` accepted
+   running process → `PATH` → bounded scan. Only `agy*.exe` counts.
 4. **model catalog** — `v1internal:fetchAvailableModels`, per account, cached
 
-Everything above is re-derived when it stops working, so a vendor update is a
-rescan rather than a breakage:
+And because vendors love breaking shit, all of it re-derives itself when it
+stops working:
 
-| update breaks | recovery |
+| update fucks up | what happens |
 |---|---|
-| client id/secret re-signed | pair marked stale → binary rescanned → every pair re-validated |
+| client id/secret re-signed | pair marked stale → binary rescanned → every pair re-verified |
 | binary replaced or moved | fingerprint (`size:mtime`) mismatch → revalidate → rescan |
-| keyring target renamed | full credential scan, next candidate adopted in the same pass |
-| refresh token rotated | store re-read; if it did not move, the pair is rescanned |
+| keyring target renamed | full credential scan, next candidate adopted, same pass |
+| refresh token rotated | store re-read; if it didn't move, the pair gets rescanned |
 
-Ported hardening, each verified on a live account:
+Hardening that's actually ported and tested, not README wank:
 
-- **upstream fallback** `daily → sandbox → production`, moving only on network
-  errors and 5xx and never after the first byte (`production` answered 429 for a
-  free-tier account while `daily` and `sandbox` answered 200)
-- **account pool** — several refresh tokens rotate per request; 429 →
-  exponential cooldown, 403 → ten minutes and disabled after three,
-  `invalid_grant` → disabled at once
-- **SSE heartbeat** every 15 s so a quiet thinking run does not look dead
+- **upstream fallback** `daily → sandbox → production`, only on network/5xx, and
+  never after the first byte reaches the client. Same day, same token:
+  `production` answered **429**, `daily` and `sandbox` answered **200**.
+- **account pool** — several refresh tokens rotate per request; 429 gets an
+  exponential cooldown, 403 gets ten minutes and dies after three strikes,
+  `invalid_grant` dies immediately. One working account and one fake one:
+  requests kept flowing, fake one got disabled, working one stayed `ok`.
+- **SSE heartbeat** every 15 s, because a thinking model goes quiet and some
+  proxy decides your connection is dead.
 - **tool calling** with `thoughtSignature` packed into the tool-call id, so the
-  tool loop survives restarts without server-side state
+  loop survives restarts with zero server state. No signature cache to lose.
 
-## Verification
+## Proof, because "trust me bro" is not proof
 
-Everything claimed here was run on a real account on 2026-11-18.
+Run on a real account, 2026-11-18:
 
 ```
-$ node agy-direct\cli.mjs --doctor
+$ node core\cli.mjs --doctor
 OK  binary        …\.gemini\bin\agy.exe (235 MB via known-path)
 OK  client_creds  binary · 1071006060591-…
 OK  keyring       gemini:antigravity
@@ -209,72 +225,72 @@ OK  quota         gemini-weekly=97.0% gemini-5h=91.5% 3p-weekly=98.8% …
 OK  catalog       31 addressable / 36 total (live)
 all good
 
-$ node agy-direct\cli.mjs --selftest
-PASS  health / models_no_key_401 / models_with_key / api_key_header
-PASS  chat / chat_stream / tool_call / thinking_events
-PASS  claude_message / claude_stream / thinking_budget
-PASS  api_key_lifecycle (create → use → revoke → 401)
-PASS  quota_endpoint
+$ node core\cli.mjs --selftest
+PASS health / models_no_key_401 / models_with_key / api_key_header
+PASS chat / chat_stream / tool_call / thinking_events
+PASS claude_message / claude_stream / thinking_budget
+PASS api_key_lifecycle (create → use → revoke → 401)
+PASS quota_endpoint
 14/14 passed
 ```
 
-Live probe of every Google model in the catalog (`--probe`): **22/24 answered**.
-`gemini-4-carbon-disabled` returns 404 by design; `gemini-2.5-pro` returned 503
-"no capacity available" at the time of the run.
+Every Google model in the catalog, one real request each (`--probe`):
+**22/24 answered**. `gemini-4-carbon-disabled` is a 404 by design;
+`gemini-2.5-pro` was 503 "no capacity" at the time. The two failures are the
+server's opinion, not the client's bug — write that down.
 
 ## Repo layout
 
-| path | what |
+| path | what the fuck is in it |
 |---|---|
 | `app/` | the app: server, UI, launcher, key store wiring, OpenAI SDK shim |
-| `agy-direct/` | direct lane: OAuth discovery, token cache, model catalog, pool, CLI |
-| `agy-api/` | older shim that spawns `agy -p` per request (kept for comparison) |
-| `hub/` | client for the local Antigravity hub control plane (analysis) |
-| `mitm/` | loopback TLS proxy used to capture and rewrite requests (`dumps/` is gitignored) |
+| `core/` | OAuth discovery, token cache, model catalog, account pool, CLI |
+| `legacy-shim/` | old shim that spawns `agy -p` per request, kept for comparison |
+| `hub/` | local Antigravity hub client (analysis only) |
+| `mitm/` | loopback TLS proxy used to capture/rewrite requests (`dumps/` gitignored) |
 | `recon/` | captured system prompt, model catalog, extraction scripts |
-| `probe/` | test fixtures used for the prompt experiments |
-| `tools/` | screenshot + demo capture + one-off patches |
-| `docs/handoff.md` | the deep notes: architecture, findings, severity table, repro |
+| `probe/` | test fixtures from the prompt experiments |
+| `tools/` | screenshot capture, publish helper, one-off patches |
+| `docs/handoff.md` | deep notes: architecture, findings, severity table, repro |
 | `docs/report.md` | the write-up with evidence |
 
-## Security notes
+## Security, briefly, because you'll probably leak your own token
 
-- The refresh token is a live credential. It lives in the Windows Credential
-  Manager and in `~/.gemini/antigravity-direct/token.json` (user-profile ACL).
-  Nothing in this repo contains one. If you ever committed one by accident,
-  revoke it from your Google account and re-sign in.
-- The local API key is a gate for this app only. It never leaves your machine;
-  the app binds to `127.0.0.1` by default.
-- No telemetry is forged, no vendor endpoint is attacked. Every request goes to
-  the same endpoint the official client uses, with your own account, on your own
-  machine.
-- The server-side content filter is a vendor control and is not touched. If you
-  need what it blocks, this project will not get it for you — that is not a
-  missing feature, it is the boundary of the design.
+- The refresh token is a live credential. It lives in Windows Credential Manager
+  and `~/.gemini/antigravity-direct/token.json` (user-profile ACL). **Nothing in
+  this repo contains one.** If you ever commit one, revoke it and re-sign in.
+- The local API key is a gate for this app only. It never leaves your machine,
+  and the app binds `127.0.0.1` by default.
+- No fake telemetry, no vendor endpoint getting hammered, no "impersonate the
+  official client" cosplay. Every request goes where the official client goes,
+  with your account, from your machine.
+- The server-side filter is not touched. If you need what it blocks, this repo
+  won't get it for you, and that's not a missing feature — it's the boundary.
 
-## FAQ
+## FAQ for people who don't read
 
-**Do I need the Antigravity window open?** No. Only the refresh token it left
-behind. Close the IDE, the CLI and the hub; the app keeps working.
+**Do I need Antigravity open?** No. Only the token it left behind.
 
-**Does it still have the system prompt / security check?** The client-side ones
-are gone: no system prompt, no tool roster, no Proctor rater, no hub. The
-server-side content filter and model refusals remain, and arrive as ordinary
-responses.
+**Is the system prompt gone?** Yes. Client-side, deleted. The Proctor rater,
+gone. The tools, gone. What's left is Google's content filter and the model's own
+opinions, and no local project moves those.
 
-**Will my account get flagged?** This path sends *less* than the official client
-— no fake telemetry, no client impersonation beyond the normal user agent, no
-extra requests. That is a smaller surface than the tools that replay client
-telemetry, but no local project can promise anything about a remote account.
+**Will my account get nuked?** This path sends *less* than the official client:
+no telemetry replay, no client impersonation beyond a normal UA, no extra
+requests. That's a smaller surface than half the proxies on GitHub. No local
+project can promise anything about a remote account — anyone who does is lying
+to you.
 
-**Which models?** Whatever `v1internal:fetchAvailableModels` returns for your
-tier — 36 entries / 31 addressable on a free-tier account, more on paid tiers.
-The catalog is asked per account, never hardcoded.
+**Which models?** Whatever the account's tier gets. 36 entries / 31 addressable
+on free tier, more if you pay. Asked live, never hardcoded — that's why the
+catalog doesn't rot like everyone else's.
 
-**Windows only?** The app and credential discovery are Windows (Credential
-Manager). The client library is plain Node and works anywhere once a refresh
-token is supplied via `AGY_REFRESH_TOKEN`.
+**Windows only?** The app and credential discovery, yes. The core client is
+plain Node and runs anywhere once you feed it `AGY_REFRESH_TOKEN`.
+
+**It says port 8790 already in use.** Then it's already running, genius. Open
+the window: `app\launch.ps1`. Or restart it: `app\launch.ps1 -Restart`.
 
 ## License
 
-MIT. See [LICENSE](LICENSE).
+MIT. Go wild. Just don't come crying when you commit your token.

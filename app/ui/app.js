@@ -321,7 +321,7 @@ function addTurn(role, text) {
   $('empty')?.remove();
   const el = document.createElement('article');
   el.className = `turn ${role}`;
-  const label = role === 'user' ? 'you' : 'agy';
+  const label = role === 'user' ? 'you' : 'cracka';
   el.innerHTML = `
     <div class="turn-head"><span class="turn-role">${label}</span><span class="turn-meta"></span></div>
     <div class="turn-body"></div>
@@ -342,7 +342,7 @@ function setLive(mode, label) {
 
 /* ─────────────────────────── chat ─────────────────────────── */
 
-const HISTORY_KEY = 'agy.history.v1';
+const HISTORY_KEY = 'crackagravity.history.v1';
 
 function persistHistory() {
   try {

@@ -18,10 +18,10 @@ from the installed binary and re-derive on update.
 
 ## What it actually does
 
-`v1internal:streamGenerateContent` per turn — same call as `agy-direct/`. The
+`v1internal:streamGenerateContent` per turn — same call as `core/`. The
 difference is everything around it:
 
-| layer | this repo (`agy-direct`) | theirs |
+| layer | this repo (`core`) | theirs |
 |---|---|---|
 | system prompt | removed; 6–38 prompt tokens | keeps a fake "official Antigravity prompt" wrapped in `<example_only do_not_follow="true">` plus a configurable proxy prompt |
 | telemetry | none | fakes it: `antigravity-unleash.goog` register/features/frontend every 60 s per token, `recordTrajectoryAnalytics`, `recordCodeAssistMetrics`, protobuf logs to `play.googleapis.com/log`, `checkPoint` POSTs |

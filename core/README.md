@@ -1,14 +1,14 @@
-# agy-direct — Antigravity quota over Google OAuth, no harness
+# core — Antigravity quota over Google OAuth, no harness
 
 Plugs in like any OpenAI-compatible endpoint: point a client at
 `http://127.0.0.1:8787/v1`, give it a key and a model id. Underneath it is one
 HTTPS POST per turn to `v1internal:streamGenerateContent`, authorized with the
 account's own Google OAuth token.
 
-`agy-api/` spawns `agy.exe` per request, which drags the whole agent harness —
+`legacy-shim/` spawns `agy.exe` per request, which drags the whole agent harness —
 65,891 chars of client-built `systemInstruction`, 14 tool declarations and a
 separate `agent_monitoring` rater call per tool step: **21,830 prompt tokens** for
-a three-word reply. `agy-direct/` sends only the caller's messages and tools:
+a three-word reply. `core/` sends only the caller's messages and tools:
 **6–38 prompt tokens** for the same kind of turn.
 
 ---
@@ -16,8 +16,8 @@ a three-word reply. `agy-direct/` sends only the caller's messages and tools:
 ## Setup on any machine
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File agy-direct\setup.ps1
-powershell -ExecutionPolicy Bypass -File agy-direct\setup.ps1 -Port 8787 -Start
+powershell -ExecutionPolicy Bypass -File core\setup.ps1
+powershell -ExecutionPolicy Bypass -File core\setup.ps1 -Port 8787 -Start
 ```
 
 `setup.ps1` checks node, runs the full chain check, mints a local API key, prints
@@ -86,12 +86,12 @@ client. `--doctor` reports every link without changing anything.
 The catalog is asked of the backend per account, so tiers differ by themselves:
 
 ```
-node agy-direct\cli.mjs --models              # grouped, live, addressable only
-node agy-direct\cli.mjs --models --all        # include internal/tab slots
-node agy-direct\cli.mjs --models --quota      # merge per-model quota + reset time
-node agy-direct\cli.mjs --models --google     # --claude --gpt --provider openai
-node agy-direct\cli.mjs --models --json --refresh
-node agy-direct\cli.mjs --pick                # numbered picker, saves default_model
+node core\cli.mjs --models              # grouped, live, addressable only
+node core\cli.mjs --models --all        # include internal/tab slots
+node core\cli.mjs --models --quota      # merge per-model quota + reset time
+node core\cli.mjs --models --google     # --claude --gpt --provider openai
+node core\cli.mjs --models --json --refresh
+node core\cli.mjs --pick                # numbered picker, saves default_model
 ```
 
 `--models` prints the backend's own grouping ("Recommended", …), provider,
@@ -99,13 +99,13 @@ context window, thinking support and remaining quota. This account (free-tier)
 sees 36 entries, 31 addressable; a Google AI Pro / standard-tier or Ultra
 account gets its own list from the same call — no branch in the code.
 
-Tier check: `node agy-direct/cli.mjs --tier`. On this account it reports
+Tier check: `node core/cli.mjs --tier`. On this account it reports
 `current_tier: free-tier`, `paid_tier: g1-pro-tier`, project `aicode-consumers`,
 which is why the upgrade line offers AI Pro / Ultra.
 
 ### Live probe — every Google model, one request each
 
-`node agy-direct/cli.mjs --probe` sends `Reply with exactly: ok` to each model and
+`node core/cli.mjs --probe` sends `Reply with exactly: ok` to each model and
 reports status, latency, tokens and the resolved backend name. `--probe --all`
 covers Claude/GPT too, `--probe --model <id>` checks one.
 
@@ -220,4 +220,4 @@ hydrogen accepts `XHIGH`, opus-high fixed. A level the model does not have retur
   commit, delete when done.
 - Everything is per-Windows-user: a second account gets its own keyring entry and
   its own state directory.
-- `agy-api/server.mjs` stays for the case where the harness prompt is wanted.
+- `legacy-shim/server.mjs` stays for the case where the harness prompt is wanted.

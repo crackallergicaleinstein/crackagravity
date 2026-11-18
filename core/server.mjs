@@ -572,7 +572,7 @@ const server = http.createServer(async (req, res) => {
 server.listen(PORT, HOST, () => {
   let who = {};
   try { syncFromKeyring(); who = identity(); } catch (e) { console.error(`auth: ${e.message}`); }
-  console.log(`agy-direct listening on http://${HOST}:${PORT}/v1`);
+  console.log(`core listening on http://${HOST}:${PORT}/v1`);
   console.log(`account: ${who.email || 'unknown'} | default: ${DEFAULT_MODEL} | tools: ${TOOLS_ENABLED ? 'on' : 'off'} | key gate: ${TOKEN ? 'on' : 'off'} | concurrency: ${CONCURRENCY}`);
 
   // Warm both caches off the hot path: the OAuth pair and the live model list.

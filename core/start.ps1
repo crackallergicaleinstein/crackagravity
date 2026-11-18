@@ -1,7 +1,7 @@
-# Start the agy-direct shim in this window. Works from any install location.
+# Start the core shim in this window. Works from any install location.
 #
-#   powershell -ExecutionPolicy Bypass -File agy-direct\start.ps1
-#   powershell -ExecutionPolicy Bypass -File agy-direct\start.ps1 -Port 9000 -Thinking HIGH
+#   powershell -ExecutionPolicy Bypass -File core\start.ps1
+#   powershell -ExecutionPolicy Bypass -File core\start.ps1 -Port 9000 -Thinking HIGH
 
 [CmdletBinding()]
 param(

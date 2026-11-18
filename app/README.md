@@ -1,4 +1,4 @@
-# agy-app — one window, one API
+# crackagravity — one window, one API
 
 A Windows app around the direct Antigravity lane: chat with the account's own
 quota, thinking control that actually changes the request, live reasoning in a
@@ -9,7 +9,7 @@ requirement.
 
 ```
 app/
-  agy-app.cmd        double-click launcher (starts the server, opens the window)
+  crackagravity.cmd        double-click launcher (starts the server, opens the window)
   launch.ps1         same thing, with -Port / -NoWindow
   server.mjs         UI + /api/* + /v1/*
   ui/                index.html, styles.css, app.js (vanilla, no framework)
@@ -21,7 +21,7 @@ app/
 ## Run
 
 ```powershell
-app\agy-app.cmd
+app\crackagravity.cmd
 # or
 powershell -ExecutionPolicy Bypass -File app\launch.ps1 -Port 8790
 ```
@@ -172,8 +172,8 @@ Thinking budgets map to levels: `>=24000` high, `>=8000` medium, otherwise low.
 ## Verify
 
 ```powershell
-node agy-direct\cli.mjs --doctor
-node agy-direct\cli.mjs --selftest     # 12 checks, boots the app on a throwaway port
+node core\cli.mjs --doctor
+node core\cli.mjs --selftest     # 12 checks, boots the app on a throwaway port
 ```
 
 Selftest covers: health, 401 without key on models and chat, models with key,
@@ -193,5 +193,5 @@ quota. 14/14 on this host.
   ACL, never commit.
 - The UI's session token is injected into `index.html` at serve time, so `/api/*`
   is same-origin only while `/v1/*` keeps the real key gate.
-- `agy-direct/server.mjs` still exists as the bare API-only shim; the app is the
+- `core/server.mjs` still exists as the bare API-only shim; the app is the
   product now.

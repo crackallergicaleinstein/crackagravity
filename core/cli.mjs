@@ -1,15 +1,15 @@
 #!/usr/bin/env node
 /**
- * agy-direct CLI.
+ * core CLI.
  *
- *   node agy-direct/cli.mjs "prompt" [--model id] [--thinking HIGH] [--stream]
- *   node agy-direct/cli.mjs --models [--all] [--json] [--refresh] [--quota]
- *   node agy-direct/cli.mjs --pick
- *   node agy-direct/cli.mjs --probe [--model id] [--all]
- *   node agy-direct/cli.mjs --doctor
- *   node agy-direct/cli.mjs --key-gen
- *   node agy-direct/cli.mjs --selftest [--key <token>]
- *   node agy-direct/cli.mjs --quota | --tier | --who | --recheck
+ *   node core/cli.mjs "prompt" [--model id] [--thinking HIGH] [--stream]
+ *   node core/cli.mjs --models [--all] [--json] [--refresh] [--quota]
+ *   node core/cli.mjs --pick
+ *   node core/cli.mjs --probe [--model id] [--all]
+ *   node core/cli.mjs --doctor
+ *   node core/cli.mjs --key-gen
+ *   node core/cli.mjs --selftest [--key <token>]
+ *   node core/cli.mjs --quota | --tier | --who | --recheck
  */
 
 import fs from 'node:fs';

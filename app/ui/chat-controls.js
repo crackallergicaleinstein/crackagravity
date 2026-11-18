@@ -1,6 +1,6 @@
 /* Chat controls: model/budget toolbar, stop, regenerate, refresh, restore. */
 
-const CHAT_HISTORY_KEY = 'agy.history.v1';
+const CHAT_HISTORY_KEY = 'crackagravity.history.v1';
 
 let toastTimer = null;
 

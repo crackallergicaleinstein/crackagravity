@@ -66,7 +66,7 @@ gpt-oss-120b-medium                      (plus tab/chat internal models)
 
 ### OpenAI-compatible shim (shipped, tested)
 
-`agy-api/server.mjs` — HTTP server on `127.0.0.1:8787`:
+`legacy-shim/server.mjs` — HTTP server on `127.0.0.1:8787`:
 
 * `POST /v1/chat/completions` — `{model, messages, stream}`; flattens chat into one agent turn, spawns
   `agy -p … --output-format json` in a throwaway temp cwd, maps `usage` to OpenAI token fields.
@@ -89,7 +89,7 @@ harness are prepended to every single request**, whether you asked for them or n
 Use it the way you would any paid endpoint:
 
 ```powershell
-$env:AGY_MODEL="claude-opus-5-5-high"; node "agy-api\server.mjs"
+$env:AGY_MODEL="claude-opus-5-5-high"; node "legacy-shim\server.mjs"
 curl http://127.0.0.1:8787/v1/chat/completions -H "Content-Type: application/json" `
   -d '{"model":"claude-opus-5-5-high","messages":[{"role":"user","content":"hi"}]}'
 ```
@@ -344,7 +344,7 @@ node "hub\hub.mjs" terminal
 node "hub\hub.mjs" close <terminalId>
 
 # free OpenAI-compatible endpoint over the account's models
-node "agy-api\server.mjs"
+node "legacy-shim\server.mjs"
 curl http://127.0.0.1:8787/v1/models
 ```
 

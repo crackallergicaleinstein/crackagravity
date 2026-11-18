@@ -1,4 +1,4 @@
-# Launch agy-app: start the server if it is not already up, then open the app
+# Launch crackagravity: start the server if it is not already up, then open the app
 # window in its own Edge profile so it never merges into the main browser.
 #
 #   powershell -ExecutionPolicy Bypass -File app\launch.ps1
@@ -14,7 +14,7 @@ param(
 
 $ErrorActionPreference = 'Stop'
 $here = $PSScriptRoot
-$stateDir = Join-Path $env:LOCALAPPDATA 'agy-app'
+$stateDir = Join-Path $env:LOCALAPPDATA 'crackagravity'
 $profileDir = Join-Path $stateDir 'window'
 $logOut = Join-Path $stateDir 'server.out.log'
 $logErr = Join-Path $stateDir 'server.err.log'
@@ -36,7 +36,7 @@ function Test-Port([string]$h, [int]$p) {
 
 function Stop-AppServer {
     Get-CimInstance Win32_Process -Filter "Name='node.exe'" -ErrorAction SilentlyContinue |
-        Where-Object { $_.CommandLine -match 'server\.mjs' -and $_.CommandLine -notmatch 'agy-api' } |
+        Where-Object { $_.CommandLine -match 'server\.mjs' -and $_.CommandLine -notmatch 'legacy-shim' } |
         ForEach-Object { try { Stop-Process -Id $_.ProcessId -Force -ErrorAction Stop } catch { } }
 }
 
@@ -50,7 +50,7 @@ if ($Restart) {
 $url = "http://${BindHost}:${Port}/"
 
 if (-not (Test-Port $BindHost $Port)) {
-    Write-Host "starting agy-app on $url"
+    Write-Host "starting crackagravity on $url"
     $env:AGY_APP_PORT = "$Port"
     $env:AGY_APP_HOST = $BindHost
     $env:AGY_APP_OPEN = '0'
@@ -74,7 +74,7 @@ if (-not (Test-Port $BindHost $Port)) {
     }
     Write-Host "server pid $($proc.Id), logs in $stateDir"
 } else {
-    Write-Host "agy-app already running on $url"
+    Write-Host "crackagravity already running on $url"
 }
 
 if ($NoWindow) { exit 0 }
