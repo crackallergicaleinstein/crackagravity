@@ -21,9 +21,16 @@ Nobody's problem here is "tokens are interesting". The problem is the invoice.
 
 Claude Opus, Sonnet, Gemini Pro through an API cost real money per million
 tokens. Meanwhile the Antigravity subscription already sitting on your machine
-covers those same models — $20/mo tier, free tier, or Ultra — and you're supposed
-to use it through one specific IDE window like a fucking peasant. Want it from
-Cline, aider, your own script? Buy API credits, or upgrade the "big plan".
+covers those same models — and depending on region, student plans and whatever
+promo is running, that subscription is **free, a couple of bucks, or bundled with
+a carrier**. Want to use it from Cline, aider or your own script? Buy API credits,
+or upgrade the "big plan". Like a fucking peasant.
+
+And the part nobody says out loud: the quota is **per account, per month**. Fresh
+signup, fresh promo, all the modern models again for another thirty days. Whether
+that is against Google's terms is between you and Google; accounts get flagged,
+that's the cost of doing business. The repo doesn't do account rotation for you —
+it just stops wasting the quota you got.
 
 This repo says no. Same models, same endpoint, **your already-paid quota**,
 exposed as a normal OpenAI + Claude compatible API on localhost. If you already
