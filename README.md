@@ -15,6 +15,25 @@ your actual fucking message in it.
 
 ---
 
+## The actual point: you're paying twice
+
+Nobody's problem here is "tokens are interesting". The problem is the invoice.
+
+Claude Opus, Sonnet, Gemini Pro through an API cost real money per million
+tokens. Meanwhile the Antigravity subscription already sitting on your machine
+covers those same models — $20/mo tier, free tier, or Ultra — and you're supposed
+to use it through one specific IDE window like a fucking peasant. Want it from
+Cline, aider, your own script? Buy API credits, or upgrade the "big plan".
+
+This repo says no. Same models, same endpoint, **your already-paid quota**,
+exposed as a normal OpenAI + Claude compatible API on localhost. If you already
+pay for the subscription, the marginal cost of a request is **zero**.
+
+The 21,830-token number below is the *reason it felt broken*: the stock client
+poured your quota into its own scaffolding, so even "free" ran out after a
+handful of questions. Strip that and the same money covers a hundred times more
+work.
+
 ## Read this before you touch anything, idiot
 
 The stock CLI (`agy -p "hi"`) costs **21,830 prompt tokens** for a three-word

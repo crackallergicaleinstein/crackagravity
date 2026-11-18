@@ -1,35 +1,36 @@
 # Short body — paste-ready
 
-Use this as the post body on Reddit / forums / Telegram. It is deliberately
-~230 words: long enough to carry the numbers, short enough that people actually
-read it. Swap the first line for the community-specific one in the other files
-if you want.
+The pitch is **money**, not tokens. Tokens are the supporting evidence: they are
+why the free quota died fast. Lead with cost, back it with the measurement, and
+close on the honest limits. ~240 words.
 
 ---
 
-So I got sick of Antigravity eating my quota and went and measured the fucking
-thing. One captured request, one three-word answer:
+You know what's actually ridiculous? Paying per token for Claude Opus, Sonnet or
+Gemini Pro, when the Antigravity subscription sitting on your machine already
+includes quota for those exact models. Twenty bucks a month, or free tier, or
+Ultra — and then you open an API bill on top of it because the IDE quota is
+locked behind a 235 MB binary that eats it for you.
 
-- 65,891-character system prompt ≈ 16.5k tokens
-- 14 tool declarations ≈ 5k tokens
-- a second "safety rater" request per tool call = 2,704 tokens
-- a 235 MB `agy.exe` spawn per turn, ~7 seconds
+That's the whole reason this exists. Same models, same endpoint, your own
+already-paid quota, exposed as a plain OpenAI + Claude compatible API on
+localhost. No API key to buy, no per-million-token invoice, no "big plan"
+upgrade to get a usable rate limit. If you already pay for the subscription, the
+marginal cost of a request is **zero**.
 
-**21,830 prompt tokens** before it even reads your question. All of that shit is
-built client-side — the upstream endpoint does not need any of it. Strip it and
-the same answer costs **6–38 tokens**, one `fetch`, no process.
+Why it wasn't usable before: the stock CLI shoves 21,830 prompt tokens of its own
+client-side scaffolding — 65k-character system prompt, 14 tool declarations, a
+per-tool-call rater, a fresh 235 MB spawn — into every single turn. That's why
+your free quota evaporated asking one question. Strip the bullshit and the same
+answer costs **6–38 tokens**, one `fetch`. Same quota, lasts a hell of a lot
+longer.
 
-So I built the whole lane around that and wrapped it in what you actually want:
-an OpenAI + Claude compatible local API (streaming, tools, thinking budgets),
-a Windows app with a key store and a live reasoning panel, and a CLI with a
-14-check selftest. Zero npm deps, no build step, no mystery 8 MB binary.
+Ships as a local API (streaming, tools, thinking budgets as numbers), a Windows
+app with key management and a live reasoning panel, and a CLI with a 14-check
+selftest. Zero npm deps, no build step.
 
-Thinking is a number now, not a vibe — measured: 1024 → 153 thought tokens,
-8192 → 348, 30000 → 1218, same prompt.
-
-And before someone asks: **it does not touch Google's content filter or model
-refusals.** Those come back as normal 200s. This is subtraction, not magic, and
-the README says so in bold instead of overselling you a bypass fantasy.
+Before anyone asks: it does **not** touch Google's server-side content filter or
+model refusals — those come back as normal 200s. This is subtraction, not magic.
 
 Windows + Node 20+: https://github.com/crackallergicaleinstein/crackagravity
 
@@ -37,14 +38,15 @@ Windows + Node 20+: https://github.com/crackallergicaleinstein/crackagravity
 
 ## Ultra-short (comment reply / Discord)
 
-> Measured Antigravity's CLI: 21,830 prompt tokens of client-side scaffolding per
-> turn for a three-word answer. Same endpoint without it: 6–38 tokens. Built an
-> OpenAI/Claude-compatible local API + Windows app around that, zero deps.
-> Doesn't touch the server-side filter — README says so. 
+> You're paying per token for Claude/Gemini while the Antigravity sub you already
+> have includes the same models — the IDE just burns that quota on 21,830 tokens
+> of its own scaffolding per turn. Exposed it as a local OpenAI/Claude API: same
+> models, zero marginal cost, 6–38 tokens per call. Server-side filter untouched.
 > https://github.com/crackallergicaleinstein/crackagravity
 
 ## One-line (X reply / Telegram)
 
-> Antigravity: 21,830 prompt tokens of scaffolding before it reads your question.
-> Direct call: 6–38. Same quota, one fetch, no 235 MB spawn.
+> Stop paying per token for models your Antigravity subscription already covers.
+> Local OpenAI/Claude API on your own quota — the stock client was just burning it
+> on 21,830 tokens of scaffolding.
 > github.com/crackallergicaleinstein/crackagravity
