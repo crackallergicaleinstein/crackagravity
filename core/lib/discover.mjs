@@ -334,6 +334,9 @@ function scanForBinary() {
  * Returns `{path, size, fingerprint, via}` or null.
  */
 export function findBinary({ thorough = false } = {}) {
+  // AGY_NO_BINARY=1 pretends the client is not installed: the cached OAuth pair
+  // or AGY_CLIENT_ID/SECRET then has to carry the session on its own.
+  if (process.env.AGY_NO_BINARY === '1') return null;
   const config = loadConfig();
   const candidates = [
     [process.env.AGY_BIN, 'env', true],

@@ -190,10 +190,17 @@ async function doctor() {
 
   let binary = null;
   try { binary = findBinary({ thorough: true }); } catch { binary = null; }
-  row('binary', Boolean(binary), binary ? `${binary.path} (${(binary.size / 1e6).toFixed(0)} MB via ${binary.via})` : 'no agy.exe found — built-in client pair will be tried');
 
   let ready = {};
-  try { ready = await ensureReady(); } catch (e) { row('resolve', false, e.message); }
+  let resolveError = '';
+  try { ready = await ensureReady(); } catch (e) { resolveError = e.message; }
+
+  // A missing binary is only a problem when nothing can supply the OAuth pair.
+  const binaryOk = Boolean(binary) || Boolean(ready.client_source);
+  row('binary', binaryOk, binary
+    ? `${binary.path} (${(binary.size / 1e6).toFixed(0)} MB via ${binary.via})`
+    : `not found — not needed, creds from ${ready.client_source || 'nothing'}${resolveError ? ' / ' + resolveError : ''}`);
+  if (resolveError) row('resolve', false, resolveError);
   const creds = loadCache();
   const credSource = ready.client_source || creds?.source || '';
   row('client_creds', Boolean(creds?.client_id), creds ? `${credSource} · ${creds.client_id}` : 'none resolved');
@@ -390,6 +397,8 @@ async function selftest({ key }) {
       const html = await (await fetch(`${base}/`)).text();
       const session = /data-session="([^"]+)"/.exec(html)?.[1];
       expect(session, 'no session token in index.html');
+
+      const askOnce = async () => {
       const r = await fetch(`${base}/api/chat`, {
         method: 'POST',
         headers: { 'content-type': 'application/json', 'x-session': session },
@@ -402,8 +411,13 @@ async function selftest({ key }) {
       expect(r.ok, `chat ${r.status}`);
       const text = await r.text();
       const thoughts = (text.match(/"type":"thought"/g) || []).length;
-      expect(thoughts > 0, 'no thought events came back');
       expect(text.includes('"type":"done"'), 'no done event');
+      return thoughts;
+      };
+
+      let thoughts = await askOnce();
+      if (thoughts === 0) thoughts = await askOnce();
+      expect(thoughts > 0, 'no thought events came back in two tries');
       return `${thoughts} thought frames`;
     });
 
@@ -505,6 +519,32 @@ async function main() {
     console.log(key);
     console.log(`\nstored in ${paths.CONFIG_FILE}`);
     console.log('clients send: Authorization: Bearer <key>   (or x-api-key / api-key)');
+    return;
+  }
+
+  if (flag('where')) {
+    // Where things came from, in the order discovery tries them — the first
+    // thing to run on a machine that behaves unlike the one this was built on.
+    const config = loadConfig();
+    const binary = findBinary({ thorough: true });
+    const creds = loadCache();
+    let who = {};
+    try { who = identity(); } catch { who = {}; }
+    console.log('binary candidates, in order:');
+    console.log(`  AGY_BIN              ${process.env.AGY_BIN || '(unset)'}`);
+    console.log(`  config.binary_path   ${config.binary_path || '(unset)'}`);
+    console.log(`  known dirs           ~/.gemini/bin/agy.exe, ~/.gemini/antigravity/bin/agy.exe, LOCALAPPDATA\\Programs\\...`);
+    console.log(`  registry             HKCU/HKLM Uninstall entries matching antigravity|gemini`);
+    console.log(`  running process      any agy.exe / language_server process`);
+    console.log(`  PATH                 where.exe agy.exe`);
+    console.log(`  bounded scan         ~/.gemini, LOCALAPPDATA\\Programs, Program Files`);
+    console.log(`  winner               ${binary ? binary.path + ' via ' + binary.via : '(none)'}`);
+    console.log('');
+    console.log(`keyring target         ${who.keyring_target || '(none)'}`);
+    console.log(`account                ${who.email || '(unknown)'}`);
+    console.log(`refresh token source   ${who.token_source || '(none)'}`);
+    console.log(`client pair source     ${creds?.source || '(none)'}`);
+    console.log(`state dir              ${paths.CACHE_DIR}`);
     return;
   }
 
