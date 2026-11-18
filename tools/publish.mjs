@@ -14,7 +14,9 @@ import os from 'node:os';
 import path from 'node:path';
 import { execFileSync, spawnSync } from 'node:child_process';
 
-const repoName = process.argv[2] || 'agy';
+const args = process.argv.slice(2);
+const flagValue = (name) => { const i = args.indexOf(name); return i >= 0 ? args[i + 1] : null; };
+const repoName = args.find((a, i) => !a.startsWith('--') && !(i > 0 && args[i - 1].startsWith('--'))) || 'agy';
 const isPrivate = process.argv.includes('--private');
 
 const PS = `
@@ -80,6 +82,14 @@ if (!me.login) {
 }
 console.log(`account: ${me.login}`);
 
+// Housekeeping: remove a repository entirely (needs the delete_repo scope).
+const deleteRepo = flagValue('--delete-repo');
+if (deleteRepo) {
+  const res = await fetch(`https://api.github.com/repos/${me.login}/${deleteRepo}`, { method: 'DELETE', headers });
+  console.log(`delete ${deleteRepo}: ${res.status === 204 ? 'deleted' : `status ${res.status} — ${(await res.text()).slice(0, 160)}`}`);
+  process.exit(0);
+}
+
 let repo = await (await fetch(`https://api.github.com/repos/${me.login}/${repoName}`, { headers })).json();
 if (!repo.full_name) {
   console.log(`creating ${me.login}/${repoName} (${isPrivate ? 'private' : 'public'})`);
@@ -122,6 +132,33 @@ if (push.status !== 0) {
   process.exit(push.status || 1);
 }
 
+// Default branch follows the pushed branch, so the repo opens on real content.
+await fetch(`https://api.github.com/repos/${repo.full_name}`, {
+  method: 'PATCH',
+  headers,
+  body: JSON.stringify({ default_branch: branch }),
+});
+
 const files = await (await fetch(`https://api.github.com/repos/${repo.full_name}/contents`, { headers })).json();
-console.log(`pushed ${Array.isArray(files) ? files.length : '?'} top-level entries`);
+console.log(`pushed ${Array.isArray(files) ? files.length : '?'} top-level entries: ${Array.isArray(files) ? files.map((f) => f.name).join(' ') : ''}`);
+
+const info = await (await fetch(`https://api.github.com/repos/${repo.full_name}`, { headers })).json();
+console.log(`default branch: ${info.default_branch} | private: ${info.private} | ${info.size} KB`);
+
+// Optional housekeeping: `--drop <branch>` deletes a stale ref, `--list <path>`
+// prints a directory so a published tree can be checked without cloning.
+const dropIdx = process.argv.indexOf('--drop');
+if (dropIdx > 0 && process.argv[dropIdx + 1]) {
+  const dead = process.argv[dropIdx + 1];
+  const res = await fetch(`https://api.github.com/repos/${repo.full_name}/git/refs/heads/${dead}`, { method: 'DELETE', headers });
+  console.log(`drop ${dead}: ${res.status === 204 ? 'deleted' : `status ${res.status}`}`);
+}
+
+const listIdx = process.argv.indexOf('--list');
+if (listIdx > 0) {
+  const dir = process.argv[listIdx + 1] || '';
+  const listed = await (await fetch(`https://api.github.com/repos/${repo.full_name}/contents/${dir}`, { headers })).json();
+  if (Array.isArray(listed)) console.log(`${dir || '/'}: ${listed.map((f) => `${f.name}${f.type === 'dir' ? '/' : ''}`).join(' ')}`);
+}
+
 console.log(repo.html_url);
