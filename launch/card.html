@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<style>
+  :root { --ink:#141413; --paper:#faf9f5; --card:#e8e6dc; --mid:#b0aea5; --orange:#d97757; --blue:#6a9bcc; --green:#788c5d; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; width: 1200px; height: 630px; }
+  body {
+    background: var(--ink);
+    color: var(--paper);
+    font-family: 'Poppins', 'Segoe UI Semibold', Arial, sans-serif;
+    padding: 54px 60px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    overflow: hidden;
+  }
+  .top { display: flex; align-items: center; gap: 16px; }
+  .mark { width: 54px; height: 54px; }
+  .word { font-size: 30px; letter-spacing: -0.03em; line-height: 1; }
+  .sub { font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--mid); margin-top: 6px; }
+  h1 {
+    font-size: 76px;
+    line-height: 0.96;
+    letter-spacing: -0.045em;
+    margin: 26px 0 0;
+    font-weight: 600;
+  }
+  h1 .num { color: var(--orange); }
+  h1 .small { font-size: 50px; color: var(--paper); }
+  .lede { font-family: Georgia, 'Times New Roman', serif; font-size: 21px; line-height: 1.5; color: #cfcdc4; max-width: 980px; margin: 22px 0 0; }
+  .bottom { display: flex; justify-content: space-between; align-items: flex-end; }
+  .bars { display: flex; gap: 8px; align-items: flex-end; height: 46px; }
+  .bar { width: 14px; }
+  .meta { text-align: right; }
+  .repo { font-family: 'Cascadia Mono', Consolas, monospace; font-size: 15px; color: var(--paper); }
+  .tags { font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--mid); margin-top: 8px; }
+</style>
+</head>
+<body>
+  <div class="top">
+    <svg class="mark" viewBox="0 0 48 48" aria-hidden="true">
+      <circle cx="24" cy="14" r="6.5" fill="none" stroke="#d97757" stroke-width="2.5"/>
+      <circle cx="15" cy="30" r="6.5" fill="none" stroke="#6a9bcc" stroke-width="2.5"/>
+      <circle cx="33" cy="30" r="6.5" fill="none" stroke="#788c5d" stroke-width="2.5"/>
+      <circle cx="24" cy="14" r="2" fill="#d97757"/>
+      <circle cx="15" cy="30" r="2" fill="#6a9bcc"/>
+      <circle cx="33" cy="30" r="2" fill="#788c5d"/>
+    </svg>
+    <div>
+      <div class="word">crackagravity</div>
+      <div class="sub">antigravity limits · for other work</div>
+    </div>
+  </div>
+
+  <div>
+    <h1><span class="num">21,830</span> tokens of scaffolding,<br>deleted. <span class="small">6–38 left.</span></h1>
+    <p class="lede">The stock client sends a 65,891-character system prompt, 14 tool declarations and a
+    per-tool-call rater with every request. Same endpoint, same models, same quota — one fetch, no spawn.</p>
+  </div>
+
+  <div class="bottom">
+    <div class="bars" aria-hidden="true">
+      <div class="bar" style="height:12px;background:#788c5d"></div>
+      <div class="bar" style="height:22px;background:#6a9bcc"></div>
+      <div class="bar" style="height:46px;background:#d97757"></div>
+      <div class="bar" style="height:8px;background:#788c5d"></div>
+      <div class="bar" style="height:16px;background:#6a9bcc"></div>
+    </div>
+    <div class="meta">
+      <div class="repo">github.com/crackallergicaleinstein/crackagravity</div>
+      <div class="tags">openai + claude compatible · windows app · zero deps</div>
+    </div>
+  </div>
+</body>
+</html>

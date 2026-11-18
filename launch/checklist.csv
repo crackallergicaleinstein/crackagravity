@@ -1,0 +1,14 @@
+channel,url,format,status,posted_at,notes
+r/LocalLLaMA,https://www.reddit.com/r/LocalLLaMA/submit,reddit-localllama.md,todo,,
+Hacker News Show HN,https://news.ycombinator.com/submit,show-hn.md,todo,,Tue-Thu 14:00-16:00 UTC performs best
+X / Twitter,https://twitter.com/intent/tweet,x-thread.md,todo,,post the thread, pin the repo
+r/GeminiAI,https://www.reddit.com/r/GeminiAI/submit,reddit-gemini.md,todo,,
+r/ClaudeAI,https://www.reddit.com/r/ClaudeAI/submit,reddit-claudeai.md,todo,,
+r/node,https://www.reddit.com/r/node/submit,reddit-node.md,todo,,
+r/selfhosted,https://www.reddit.com/r/selfhosted/submit,reddit-node.md,todo,,reword the title, no repost of body
+Discord (existing servers),-,discord.md,todo,,only servers you are already active in
+V2EX,https://www.v2ex.com/new,chinese.md,todo,,
+Telegram UZ channels,-,telegram-uz-ru.md,todo,,no mass DMs
+Telegram RU channels,-,telegram-uz-ru.md,todo,,
+dev.to,https://dev.to/new,article.md,todo,,
+Hashnode,https://hashnode.com/create/story,article.md,todo,,canonical link to dev.to

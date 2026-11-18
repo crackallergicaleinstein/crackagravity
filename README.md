@@ -277,6 +277,8 @@ Every Google model in the catalog, one real request each (`--probe`):
 `gemini-2.5-pro` was 503 "no capacity" at the time. The two failures are the
 server's opinion, not the client's bug — write that down.
 
+![crackagravity](launch/social-card.png)
+
 ## Repo layout
 
 | path | what the fuck is in it |
