@@ -1,6 +1,6 @@
 # crackagravity
 
-**Antigravity limits, but for whatever the fuck you want to do with them.**
+**crackagravity solves the quota problem. Antigravity limits, for whatever the fuck you want to do with them.**
 
 You have a Google account sitting in the Antigravity client. That client burns
 your quota on 16.5k tokens of its own fucking system prompt before your question
